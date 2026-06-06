@@ -68,9 +68,47 @@ const TIERS = [
 ];
 
 const PLATEGA_METHODS = [
-  { id: 'sbp',    name: 'СБП (Россия)', icon: <Smartphone className="w-4 h-4" />, badge: 'Быстро' },
-  { id: 'crypto', name: 'Криптовалюта',  icon: <Bitcoin className="w-4 h-4" />,    badge: 'Авто'   },
+  { id: 'sbp',    name: 'СБП / Карты РФ',            icon: <Smartphone className="w-4 h-4" />, badge: 'Авто'   },
+  { id: 'crypto', name: 'Криптовалюта (CryptoBot)',  icon: <Bitcoin className="w-4 h-4" />,    badge: 'Авто'   },
 ];
+
+const MANUAL_METHODS = [
+  {
+    id: 'kazakhstan',
+    name: 'Карта Казахстана',
+    icon: <CreditCard className="w-4 h-4" />,
+    badge: 'Ручной',
+    country: '🇰🇿 Казахстан',
+    currency: 'KZT',
+    symbol: '₸',
+    infoUrl: 'https://t.me/vibetechhSupport',
+    requisites: [
+      { label: 'Номер карты', value: '4400 4303 5866 6060' },
+      { label: 'Получатель', value: 'YEGOR LYASHENKO' },
+    ],
+  },
+  {
+    id: 'belarus',
+    name: 'Карта Беларуси',
+    icon: <CreditCard className="w-4 h-4" />,
+    badge: 'Ручной',
+    country: '🇧🇾 Беларусь',
+    currency: 'BYN',
+    symbol: 'Br',
+    infoUrl: 'https://t.me/vibetechhSupport',
+    requisites: [
+      { label: 'Номер карты', value: '4400 4303 5866 6060' },
+      { label: 'Получатель', value: 'YEGOR LYASHENKO' },
+    ],
+  },
+];
+
+const METHOD_NAMES: Record<string, string> = {
+  sbp: 'СБП (Россия)',
+  crypto: 'Криптовалюта (CryptoBot)',
+  kazakhstan: 'Карта Казахстана (ручной)',
+  belarus: 'Карта Беларуси (ручной)',
+};
 
 interface JarvisIndustriesModalProps {
   isOpen: boolean;
@@ -182,6 +220,7 @@ const JarvisIndustriesModal: React.FC<JarvisIndustriesModalProps> = ({ isOpen, o
   };
 
   const isPlatega = PLATEGA_METHODS.some(m => m.id === selectedMethod);
+  const selectedManual = MANUAL_METHODS.find(m => m.id === selectedMethod) || null;
 
   // Цена с учётом скидки
   const getTierDisplayPrice = (tier: typeof TIERS[0]) =>
@@ -349,7 +388,7 @@ const JarvisIndustriesModal: React.FC<JarvisIndustriesModalProps> = ({ isOpen, o
       case 'info': return 'Apex Technology — персональный цифровой дворецкий нового поколения';
       case 'tier': return 'Jarvis Industries — выберите подходящий тариф';
       case 'payment': return `${selectedTier?.fullName} — ${selectedTier?.price.toLocaleString('ru-RU')} ₽`;
-      case 'pending': return `${selectedTier?.fullName} — ожидаем подтверждение Platega`;
+      case 'pending': return `${selectedTier?.fullName} — ожидаем подтверждение оплаты`;
       case 'requisites': return `${selectedTier?.fullName} — ${selectedTier?.price.toLocaleString('ru-RU')} ₽`;
       case 'screenshot': return 'Прикрепите скриншот оплаты';
       case 'sending': return 'Отправляем заявку...';
@@ -557,6 +596,19 @@ const JarvisIndustriesModal: React.FC<JarvisIndustriesModalProps> = ({ isOpen, o
                       <span className="text-sm font-mono text-zinc-500 pr-4">{getTierDisplayPrice(selectedTier).toLocaleString('ru-RU')} ₽</span>
                     </div>
                   ))}
+                  {MANUAL_METHODS.map((method) => (
+                    <div key={method.id} onClick={() => setSelectedMethod(method.id)}
+                      className={`flex items-center rounded-2xl border transition-all cursor-pointer ${selectedMethod === method.id ? 'border-white bg-zinc-900' : 'border-transparent bg-zinc-900/50 hover:bg-zinc-800/80'}`}>
+                      <div className="flex-1 flex items-center gap-3 p-4">
+                        <span className="text-zinc-400">{method.icon}</span>
+                        <span className="font-medium text-[14px] text-zinc-100">{method.name}</span>
+                        {method.badge && <span className="text-[10px] bg-white/10 text-zinc-400 px-2 py-0.5 rounded-full">{method.badge}</span>}
+                      </div>
+                      <span className="text-sm font-mono text-zinc-500 pr-4">
+                        {getPriceForMethod(method.currency, method.symbol)}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -574,12 +626,63 @@ const JarvisIndustriesModal: React.FC<JarvisIndustriesModalProps> = ({ isOpen, o
                     setErrorMsg('');
                     if (isPlatega) {
                       void callPlatega();
+                    } else {
+                      setStep('requisites');
                     }
                   }}
                   disabled={!selectedMethod || isLoading}
                   className="flex-1 h-14 bg-white text-black font-black uppercase rounded-2xl hover:bg-zinc-200 disabled:opacity-30 active:scale-95 transition-all"
                 >
-                  {isLoading ? <span className="flex items-center gap-2"><Loader2 className="animate-spin" size={18} /> Открываем оплату...</span> : `Оплатить ${getTierDisplayPrice(selectedTier).toLocaleString('ru-RU')} ₽`}
+                  {isLoading ? (
+                    <span className="flex items-center gap-2"><Loader2 className="animate-spin" size={18} /> Открываем оплату...</span>
+                  ) : isPlatega ? (
+                    `Оплатить ${getTierDisplayPrice(selectedTier).toLocaleString('ru-RU')} ₽`
+                  ) : (
+                    'Показать реквизиты'
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* REQUISITES */}
+          {step === 'requisites' && selectedManual && selectedTier && (
+            <div className="space-y-4">
+              {selectedManual.requisites.map((req, i) => (
+                <div key={i} className="bg-zinc-900/60 p-4 rounded-2xl border border-white/5 flex justify-between items-center">
+                  <div>
+                    <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest">{req.label}</p>
+                    <p className="font-mono text-base tracking-wider text-white mt-1">{req.value}</p>
+                  </div>
+                  <button onClick={() => { navigator.clipboard.writeText(req.value); toast.success('Скопировано!'); }} className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors ml-3"><Copy size={16} /></button>
+                </div>
+              ))}
+              <div className="bg-zinc-900/30 p-4 rounded-2xl border border-white/5 space-y-1">
+                <p className="text-[11px] text-zinc-500 leading-relaxed">
+                  Переведите{" "}
+                  <span className="text-white font-bold">
+                    {getPriceForMethod(selectedManual.currency, selectedManual.symbol)}
+                  </span>{" "}
+                  по реквизитам выше и укажите в комментарии название тарифа.
+                </p>
+                {selectedManual.currency !== 'RUB' && (
+                  <p className="text-[10px] text-zinc-600">
+                    = {getTierDisplayPrice(selectedTier).toLocaleString('ru-RU')} ₽ по актуальному курсу
+                  </p>
+                )}
+              </div>
+              <button onClick={() => window.open(selectedManual.infoUrl, '_blank')} className="w-full flex items-center justify-center gap-2 text-zinc-500 hover:text-white text-sm transition-colors py-2">
+                <ExternalLink size={14} /> Инструкция по оплате
+              </button>
+              <div className="flex gap-3">
+                <button onClick={() => { setStep('payment'); }} className="h-14 px-5 rounded-2xl border border-white/10 text-zinc-500 hover:text-white transition-all font-bold text-sm">
+                  ← Назад
+                </button>
+                <Button
+                  onClick={() => { setStep('screenshot'); }}
+                  className="flex-1 h-14 bg-white text-black font-black uppercase rounded-2xl hover:bg-zinc-200"
+                >
+                  Я оплатил — прикрепить скриншот
                 </Button>
               </div>
             </div>

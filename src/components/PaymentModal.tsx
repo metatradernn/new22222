@@ -23,9 +23,47 @@ interface PaymentModalProps {
 }
 
 const PLATEGA_METHODS = [
-  { id: 'sbp',    name: 'СБП (Россия)',  icon: <Smartphone className="w-4 h-4" />, badge: 'Быстро', country: '🇷🇺 Россия',  currency: 'RUB',  symbol: '₽',  rate: 1 },
-  { id: 'crypto', name: 'Криптовалюта',   icon: <Bitcoin className="w-4 h-4" />,    badge: 'Авто',   country: '🌍 Весь мир', currency: 'USDT', symbol: '$', rate: 0.011 },
+  { id: 'sbp',    name: 'СБП / Карты РФ',             icon: <Smartphone className="w-4 h-4" />, badge: 'Авто',   country: '🇷🇺 Россия',   currency: 'RUB',  symbol: '₽', rate: 1.0 },
+  { id: 'crypto', name: 'Криптовалюта (CryptoBot)',   icon: <Bitcoin className="w-4 h-4" />,    badge: 'Авто',   country: '🌍 Весь мир', currency: 'USDT', symbol: '$', rate: 0.011 },
 ];
+
+const MANUAL_METHODS = [
+  {
+    id: 'kazakhstan',
+    name: 'Карта Казахстана',
+    icon: <CreditCard className="w-4 h-4" />,
+    badge: 'Ручной',
+    country: '🇰🇿 Казахстан',
+    currency: 'KZT',
+    symbol: '₸',
+    infoUrl: 'https://t.me/vibetechhSupport',
+    requisites: [
+      { label: 'Номер карты', value: '4400 4303 5866 6060' },
+      { label: 'Получатель', value: 'YEGOR LYASHENKO' },
+    ],
+  },
+  {
+    id: 'belarus',
+    name: 'Карта Беларуси',
+    icon: <CreditCard className="w-4 h-4" />,
+    badge: 'Ручной',
+    country: '🇧🇾 Беларусь',
+    currency: 'BYN',
+    symbol: 'Br',
+    infoUrl: 'https://t.me/vibetechhSupport',
+    requisites: [
+      { label: 'Номер карты', value: '4400 4303 5866 6060' },
+      { label: 'Получатель', value: 'YEGOR LYASHENKO' },
+    ],
+  },
+];
+
+const METHOD_NAMES: Record<string, string> = {
+  sbp: 'СБП (Россия)',
+  crypto: 'Криптовалюта (CryptoBot)',
+  kazakhstan: 'Карта Казахстана (ручной)',
+  belarus: 'Карта Беларуси (ручной)',
+};
 
 
 const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, productName, productId, productPrice }) => {
@@ -73,6 +111,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, productNam
   }, [isOpen]);
 
   const isPlatega = PLATEGA_METHODS.some(m => m.id === selectedMethod);
+  const selectedManual = MANUAL_METHODS.find(m => m.id === selectedMethod) || null;
 
   const priceInCurrency = productPrice
     ? `${convertPrice(productPrice)} ${getSymbol()}`
@@ -241,7 +280,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, productNam
     if (!selectedMethod) { setErrorMsg('Выберите способ оплаты'); return; }
     if (!profile) { setErrorMsg('Необходимо войти в аккаунт'); return; }
     setErrorMsg('');
-    if (isPlatega) await callPlatega();
+    if (isPlatega) {
+      await callPlatega();
+    } else {
+      setShowRequisites(true);
+    }
   };
 
   const goToProfile = () => {
@@ -560,6 +603,19 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, productNam
                           </span>
                         </div>
                       ))}
+                      {MANUAL_METHODS.map((method) => (
+                        <div key={method.id} onClick={() => setSelectedMethod(method.id)}
+                          className={`flex items-center rounded-2xl border transition-all cursor-pointer ${selectedMethod === method.id ? 'border-white bg-zinc-900' : 'border-transparent bg-zinc-900/50 hover:bg-zinc-800/80'}`}>
+                          <div className="flex-1 flex items-center gap-3 p-4">
+                            <span className="text-zinc-400">{method.icon}</span>
+                            <span className="font-medium text-[14px] text-zinc-100">{method.name}</span>
+                            {method.badge && <span className="text-[10px] bg-white/10 text-zinc-400 px-2 py-0.5 rounded-full">{method.badge}</span>}
+                          </div>
+                          <span className="text-sm font-mono text-zinc-500 pr-4">
+                            {getPriceForMethod(method.currency, method.symbol)}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   </div>
 
@@ -568,7 +624,13 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, productNam
 
                   <Button onClick={handlePay} disabled={isLoading || !selectedMethod}
                     className="w-full h-14 bg-white text-black font-black uppercase text-sm tracking-widest rounded-2xl hover:bg-zinc-200 transition-all active:scale-95">
-                    {isLoading ? <Loader2 className="animate-spin" size={20} /> : `Оплатить ${priceInCurrency}`}
+                    {isLoading ? (
+                      <Loader2 className="animate-spin" size={20} />
+                    ) : isPlatega ? (
+                      `Оплатить ${priceInCurrency}`
+                    ) : (
+                      'Показать реквизиты'
+                    )}
                   </Button>
                 </div>
               )}

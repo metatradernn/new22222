@@ -22,19 +22,25 @@ serve(async (req) => {
 
     // Получаем все доступные методы
     const [methodsRes, merchantRes] = await Promise.all([
-      fetch('https://api.platega.io/transaction/payment_methods', {
+      fetch('https://app.platega.io/transaction/payment_methods', {
         headers: { 'X-MerchantId': PLATEGA_MERCHANT_ID, 'X-Secret': PLATEGA_SECRET },
       }),
-      fetch(`https://api.platega.io/merchant/${PLATEGA_MERCHANT_ID}`, {
+      fetch(`https://app.platega.io/merchant/${PLATEGA_MERCHANT_ID}`, {
         headers: { 'X-MerchantId': PLATEGA_MERCHANT_ID, 'X-Secret': PLATEGA_SECRET },
       }),
     ]);
 
-    const methodsData = await methodsRes.json();
-    const merchantData = await merchantRes.json();
+    const methodsText = await methodsRes.text();
+    const merchantText = await merchantRes.text();
 
-    console.log("[get-payment-methods] All methods:", JSON.stringify(methodsData));
-    console.log("[get-payment-methods] Merchant data:", JSON.stringify(merchantData));
+    console.log("[get-payment-methods] methodsRes status:", methodsRes.status, "body:", methodsText);
+    console.log("[get-payment-methods] merchantRes status:", merchantRes.status, "body:", merchantText);
+
+    let methodsData = {};
+    try { methodsData = JSON.parse(methodsText); } catch(e) { methodsData = { errorParsing: e.message, text: methodsText }; }
+
+    let merchantData = {};
+    try { merchantData = JSON.parse(merchantText); } catch(e) { merchantData = { errorParsing: e.message, text: merchantText }; }
 
     return new Response(JSON.stringify({ methods: methodsData, merchant: merchantData }), {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },

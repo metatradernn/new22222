@@ -7,13 +7,11 @@ import ProductCard from '@/components/ProductCard';
 import PaymentModal from '@/components/PaymentModal';
 import InfoModal from '@/components/InfoModal';
 import JarvisIndustriesModal from '@/components/JarvisIndustriesModal';
-import MetacoreModal from '@/components/MetacoreModal';
 import LegalDocsModal from '@/components/LegalDocsModal';
 import { useAuth } from '@/hooks/use-auth';
 import { useSale } from '@/hooks/use-sale';
 
 const JARVIS_INDUSTRIES_ID = 'jarvis-industries';
-const METACORE_ID = 'metacore';
 
 const products = [
   {
@@ -36,17 +34,6 @@ const products = [
     isComingSoon: false,
     isNew: true
   },
-  {
-    id: 'metacore',
-    name: 'Metacore',
-    description: 'Десктопная IDE с командой AI-агентов: сайты, SaaS, боты и приложения от идеи до запуска за 2 минуты.',
-    fullInfo: 'Десктопное приложение, которое пишет код за тебя.\nНе плагин. Не браузерная игрушка. Полноценная IDE на твоём компьютере, которая умеет поднимать сайты, SaaS, telegram-боты и electron-приложения от идеи до запуска за 2 минуты.\n\n━━━━━━━━━━━━━━━━━━━━━\n\n🔥 Что умеет Metacore:\n\n🤖 Топовые AI-модели в одной подписке\nClaude Opus 4.7 · GPT-5 · Gemini 3 Pro · Kimi K2 · 10+ других. Без API-ключей, без счетов от Anthropic и OpenAI отдельно. Платишь один раз — пользуешься всем.\n\n⚡ Команда из 4 AI-агентов\nDesigner → Backend → Frontend → QA. Один промпт — на выходе готовый проект с дизайном, API, тестами и git-историей.\n\n🎨 Лайв-превью с hot reload\nПишешь промпт — за 5 секунд видишь результат прямо в окне Metacore. Без VS Code, без браузера, без переключений.\n\n🔌 Интеграции в один клик\nSupabase для бекенда, GitHub для версионирования, MCP-серверы для расширения. Всё подключается кнопкой, без yaml-конфигов.\n\n📚 Библиотека промптов\nСохраняешь свои наработки — копируешь одним кликом. «Сделай форму с Zod», «Добавь dark mode», «Напиши FastAPI-роут» — всё под рукой.\n\n🛒 Публичная галерея\nПокупаешь чужие проекты — через секунду они у тебя локально. Продаёшь свои — забираешь 70% с каждой продажи.\n\n💰 Встроенный кошелёк\nЗаработал на шаблонах? Запросил вывод USDT (TRC20 / ERC20) — получил.\n\n🔄 Авто-обновления без переустановки\nУстановил один раз — Metacore сам обновляется в фоне. Никаких ручных скачиваний.\n\n━━━━━━━━━━━━━━━━━━━━━\n\n🎁 Три тарифа на выбор:\n• Demo — 200 токенов · 1 999 ₽ (ознакомительный)\n• Standard — 7 000 токенов · 9 990 ₽ (основной, лучший выбор)\n• Pro — 15 000 токенов · 15 000 ₽ (для профи, лучшая цена/токен)',
-    price: '1999',
-    image: '/assets/metacore.jpg',
-    isComingSoon: false,
-    isNew: true,
-    isMonthly: false
-  },
 ];
 
 const Index = () => {
@@ -58,7 +45,6 @@ const Index = () => {
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isJarvisIndustriesOpen, setIsJarvisIndustriesOpen] = useState(false);
-  const [isMetacoreOpen, setIsMetacoreOpen] = useState(false);
   const [isLegalDocsOpen, setIsLegalDocsOpen] = useState(false);
 
   const handlePay = (productName: string, productId: string) => {
@@ -66,10 +52,7 @@ const Index = () => {
       setIsJarvisIndustriesOpen(true);
       return;
     }
-    if (productId === METACORE_ID) {
-      setIsMetacoreOpen(true);
-      return;
-    }
+
     setSelectedProduct(productName);
     setIsPayModalOpen(true);
   };
@@ -80,10 +63,9 @@ const Index = () => {
   };
 
   const currentProduct = products.find(p => p.name === selectedProduct) || null;
-  // Базовая цена без скидки — скидка применяется на сервере (platega-webhook),
-  // чтобы избежать двойного дисконтирования и подмены цены.
+  // Цена со скидкой, если распродажа активна
   const currentProductPrice = currentProduct
-    ? parseInt(currentProduct.price) || 0
+    ? (isSaleActive ? getDiscountedPrice(parseInt(currentProduct.price) || 0) : (parseInt(currentProduct.price) || 0))
     : 0;
 
   return (
@@ -136,7 +118,7 @@ const Index = () => {
         {/* Карточки */}
         <main className="flex-1 overflow-y-auto px-3 sm:px-12 pb-3 sm:pb-12">
 
-          {/* 🎉 RELEASE Banner — Jarvis · Ghost GPT · Metacore вышли в полной версии */}
+          {/* 🎉 RELEASE Banner — Jarvis · Ghost GPT вышли в полной версии */}
           {showBanner && (
             <div className="mb-3 sm:mb-6 relative overflow-hidden rounded-2xl sm:rounded-3xl">
               {/* Фоновый градиент: фиолетово-синий праздничный */}
@@ -187,13 +169,13 @@ const Index = () => {
                     <div className="flex items-end justify-between gap-3">
                       <div className="min-w-0">
                         <p className="text-white/90 text-xs sm:text-sm font-bold uppercase tracking-wider mb-1">
-                          🦾 Jarvis · 👻 Ghost GPT · ⚡ Metacore
+                          🦾 Jarvis · 👻 Ghost GPT
                         </p>
                         <p className="text-2xl sm:text-4xl font-black text-white uppercase leading-tight tracking-tight drop-shadow-[0_2px_12px_rgba(217,70,239,0.6)]">
                           ВСЕ В ПОЛНОЙ ВЕРСИИ!
                         </p>
                         <p className="text-white/70 text-[11px] sm:text-sm font-bold mt-1.5">
-                          В честь релиза — <span className="text-white font-black">−{percent}%</span> на всё · до 31 мая
+                          В честь релиза — <span className="text-white font-black">−{percent}%</span> на всё · до 7 июня 20:00 МСК
                         </p>
                       </div>
                       <div className="text-right flex-shrink-0">
@@ -221,13 +203,13 @@ const Index = () => {
                       </div>
                     </div>
                     <p className="text-white/80 text-xs sm:text-sm font-bold uppercase tracking-wider mb-1">
-                      🦾 Jarvis · 👻 Ghost GPT · ⚡ Metacore
+                      🦾 Jarvis · 👻 Ghost GPT
                     </p>
                     <p className="text-xl sm:text-3xl font-black text-white uppercase leading-tight tracking-tight">
                       РЕЛИЗ ПОЛНЫХ ВЕРСИЙ
                     </p>
                     <p className="text-white/60 text-xs sm:text-sm mt-1">
-                      28 мая · скидка <span className="text-white font-black">−{percent}%</span> на 3 дня
+                      6 июня · скидка <span className="text-white font-black">−{percent}%</span> на 24 часа
                     </p>
                   </>
                 )}
@@ -256,7 +238,7 @@ const Index = () => {
                   isComingSoon={product.isComingSoon}
                   isNew={(product as any).isNew}
                   isBeta={product.id === 'jarvis-max'}
-                  hasMacOS={product.id === 'jarvis-max' || product.id === 'metacore'}
+                  hasMacOS={product.id === 'jarvis-max'}
                   isMonthly={(product as any).isMonthly}
                   onPay={() => handlePay(product.name, product.id)}
                   onInfo={() => handleInfo(product.name)}
@@ -306,10 +288,7 @@ const Index = () => {
         onClose={() => setIsJarvisIndustriesOpen(false)}
       />
 
-      <MetacoreModal
-        isOpen={isMetacoreOpen}
-        onClose={() => setIsMetacoreOpen(false)}
-      />
+
 
       <LegalDocsModal
         isOpen={isLegalDocsOpen}

@@ -1,0 +1,19 @@
+project_id = "dgsqexlmknnbdeikrjba"
+
+[functions.platega-webhook]
+verify_jwt = false
+
+[functions.send-notification]
+verify_jwt = false
+
+[functions.telegram-webhook]
+verify_jwt = false
+
+[functions.invite-to-group]
+verify_jwt = false
+
+[functions.setup-webhook]
+verify_jwt = false
+
+[functions.get-payment-methods]
+verify_jwt = false

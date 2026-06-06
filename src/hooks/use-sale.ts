@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 
-// 🤝 APEX TECHNOLOGY — скидка 30% на 3 дня
-// с 28.05.2026 00:00 по 31.05.2026 00:00 МСК (МСК = UTC+3)
-const SALE_START = new Date('2026-05-27T21:00:00Z'); // 00:00 МСК 28 мая
-const SALE_END   = new Date('2026-05-30T21:00:00Z'); // 00:00 МСК 31 мая
+// 🤝 APEX TECHNOLOGY — скидка 30% на 24 часа
+// с 06.06.2026 20:00 по 07.06.2026 20:00 МСК (МСК = UTC+3)
+const SALE_START = new Date('2026-06-06T17:00:00Z'); // 20:00 МСК 6 июня
+const SALE_END   = new Date('2026-06-07T17:00:00Z'); // 20:00 МСК 7 июня
 const SALE_PERCENT = 30;
 
 function isSaleNow(): boolean {
